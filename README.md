@@ -1,0 +1,4 @@
+sentimento
+==========
+
+Seedhack project
