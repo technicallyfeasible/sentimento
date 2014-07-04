@@ -1,0 +1,14 @@
+{
+    "applications": {
+        "Sentimento": {
+            "applicationId": "NqximxNgr0SHfBnzlttUwbmIRuFJfWV6nea9N5jI", 
+            "masterKey": "q957lsipWRM422Us8SREo9ZLwoGx2GgTJXXYFIr4"
+        }, 
+        "_default": {
+            "link": "Sentimento"
+        }
+    }, 
+    "global": {
+        "parseVersion": "1.2.18"
+    }
+}
