@@ -21,6 +21,11 @@ Parse.Cloud.define("sync", function (request, response) {
 });
 
 
+//soms
+
+
+//endsoms
+
 /*Parse.Cloud.job("sync", function(request, status) {
 	// Set up to modify user data
 	Parse.Cloud.useMasterKey();
