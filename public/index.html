@@ -63,8 +63,10 @@
                 if (!user.existed()) {
                     console.log("New User signed up and logged in through Facebook!");
                     document.getElementById('panel_logged_in').style.display = "";
+                    window.location.href = "detail.html";
                 } else {
                     console.log("User exists already and has been logged in through Facebook!");
+                    window.location.href = "detail.html";
                 }
             },
             error: function (user, error) {
