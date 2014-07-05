@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Your Day's Sentimento</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="font-awesome/css/font-awesome.min.css"/>
+
+    <script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
+
+    <script src='../js/chart.min.js'></script>
+
+</head>
+<body>
+
+<div class="container">
+
+    <div class="page-header">
+        <!--<h1>Simple Dashboard <small>Bootstrap template, demonstrating a simple dashboard page with two related charts</small></h1>-->
+    </div>
+
+rr
+    <canvas id="income" width="600" height="400"></canvas>
+
+
+
+<!--    <div class="container">
+        <div class="row">
+            <div class="col-md-10">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3>Quarterly Sales</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div id="quarterChart"></div>
+                    </div>
+                </div>
+            </div>
+            &lt;!&ndash;<div class="col-md-6">&ndash;&gt;
+            &lt;!&ndash;<div class="panel panel-default">&ndash;&gt;
+            &lt;!&ndash;<div class="panel-heading">&ndash;&gt;
+            &lt;!&ndash;<h3>Details per quarter</h3>&ndash;&gt;
+            &lt;!&ndash;</div>&ndash;&gt;
+            &lt;!&ndash;<div id="detailChart" class="panel-body">&ndash;&gt;
+            &lt;!&ndash;</div>&ndash;&gt;
+            &lt;!&ndash;</div>&ndash;&gt;
+            &lt;!&ndash;</div>&ndash;&gt;
+        </div>
+    </div>-->
+
+
+    <script>
+        var barData = {
+            labels : ["January","February","March","April","May","June"],
+            datasets : [
+                {
+                    fillColor : "#48A497",
+                    strokeColor : "#48A4D1",
+                    data : [456,479,324,569,702,600]
+                }/*,
+                {
+                    fillColor : "rgba(73,188,170,0.4)",
+                    strokeColor : "rgba(72,174,209,0.4)",
+                    data : [364,504,605,400,345,320]
+                },
+*/
+
+            ]
+        }
+
+        var income = document.getElementById("income").getContext("2d");
+        new Chart(income).Bar(barData);
+
+
+    </script>
+
+
+    <!-- Simple Dashboard - END -->
+
+</div>
+
+</body>
+</html>

@@ -1,5 +1,6 @@
 html,body {
   height:100%;
+    background-image: url("../background.jpg");
 }
 
 h1 {
@@ -18,9 +19,10 @@ h1 {
   margin: 0 auto;
   width: 100%;
   min-height:100%;
-  background-color:#110022;
+  /*background-color:#110022;*/
   color:#eee;
   overflow:hidden;
+
 }
 
 .container-full a {
@@ -31,4 +33,4 @@ h1 {
 .v-center {
   margin-top:7%;
 }
-  
+
