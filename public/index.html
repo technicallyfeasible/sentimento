@@ -4,11 +4,11 @@
     <meta charset="utf-8">
 
     <title>My Parse App</title>
-    <meta name="description" content="My Parse App">
+    <meta name="description" content="Sentimento">
     <meta name="viewport" content="width=device-width">
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/styles.css">
-    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <script type="text/javascript" src="http://www.parsecdn.com/js/parse-1.2.18.min.js"></script>
 </head>
 
@@ -82,7 +82,13 @@
             xfbml      : true  // parse XFBML
         });
 
-        // Additional initialization code here
+			  // Additional init code here
+		 	  FB.getLoginStatus(function(response) {
+		  	    if (response.status === 'connected') {
+		        	// user logged in and linked to app
+        			alert("already logged in");
+    		  }
+		   });
     };
 
 
@@ -109,7 +115,7 @@
     function sentimentoLogin() {
         console.log('Clicked');
 
-        Parse.FacebookUtils.logIn(null, {
+        Parse.FacebookUtils.logIn("user_likes,user_activities,user_status", {
             success: function(user) {
                 if (!user.existed()) {
                     alert("User signed up and logged in through Facebook!");
