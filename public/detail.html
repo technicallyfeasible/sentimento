@@ -15,15 +15,56 @@
     <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
     <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
+    <script type="text/javascript" src="http://www.parsecdn.com/js/parse-1.2.18.min.js"></script>
 </head>
 <body>
+<script type="text/javascript">
+</script>
 
 
-<h1>Hello, world!</h1>
+<h1>Here's your data</h1>
+<ul id="results" class="list-group">
+</ul>
 
 <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 <!-- Include all compiled plugins (below), or include individual files as needed -->
 <script src="js/bootstrap.min.js"></script>
+
+<script type="text/javascript">
+	Parse.initialize("NqximxNgr0SHfBnzlttUwbmIRuFJfWV6nea9N5jI", "0KitXvzwMe4NPk64VUeirTTJE4FqpTsdcPdgEnTs");
+	//Parse.initialize("Dd6QnsTaZMusV0FUOzfI5b7AkoOOaWeWEUT9Cg7p", "fYosGWfk9CjaviIoo5BRh0x3ygXXS5yAHdzzEQ5w");
+
+	function startSync() {
+		Parse.Cloud.run('sync', {}, {
+		  success: function(result) {
+				fetchData();
+		  },
+		  error: function(error) {
+				document.getElementById('results').innerHTML = "<li class='list-group-item'>There was an error: " + error.message + " ("+ error.code +")</li>";
+		  }
+		});
+	}
+
+	function fetchData() {
+		document.getElementById('results').innerHTML = "<li class='list-group-item'>Fetching your data...</li>";
+
+		var Sentiment = Parse.Object.extend("Sentiment");
+		var query = new Parse.Query(Sentiment);
+		query.find({
+		  success: function(sentiments) {
+				var html = "";
+				for (var i = 0; i < sentiments.length; i++) {
+					var s = sentiments[i];
+					html += "<li class='list-group-item'>"+ s.get('fb_id') +": "+ s.get('text') +"</li>";
+				}
+				document.getElementById('results').innerHTML = html;
+		  },
+		  error: function(object, error) {
+				document.getElementById('results').innerHTML = "<li class='list-group-item'>There was an error: " + error.message + " ("+ error.code +")</li>";
+		  }
+		});
+	}
+</script>
 </body>
 </html>
