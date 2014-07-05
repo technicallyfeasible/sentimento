@@ -3,7 +3,7 @@ require('cloud/app.js');
 Parse.Cloud.afterSave(Parse.User, function(request) {
 	var user = Parse.User.current();
 	if (!user.existed())
-		console.error("user signed up: " + user.name);
+		console.error("user signed up: " + user.name());
 	else
 		console.error("user was saved: " + user.name);
 });
