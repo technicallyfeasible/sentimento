@@ -8,6 +8,7 @@
 
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/detailpage.css" rel="stylesheet">
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -16,13 +17,22 @@
     <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
     <script type="text/javascript" src="http://www.parsecdn.com/js/parse-1.2.18.min.js"></script>
+
+    <script src="Chart.js"></script>
+
 </head>
 <body>
-<script type="text/javascript">
-</script>
 
 
-<h1>Here's your data</h1>
+
+<h1>Welcome
+<span id="user-name"></div>
+</h1>
+
+<h2>
+    Let's see how your mood was over the last week from your life-logs
+</h2>
+
 <ul id="results" class="list-group">
 </ul>
 
@@ -31,41 +41,127 @@
 <!-- Include all compiled plugins (below), or include individual files as needed -->
 <script src="js/bootstrap.min.js"></script>
 
+
+
+
+
 <script type="text/javascript">
-	Parse.initialize("NqximxNgr0SHfBnzlttUwbmIRuFJfWV6nea9N5jI", "0KitXvzwMe4NPk64VUeirTTJE4FqpTsdcPdgEnTs");
-	//Parse.initialize("Dd6QnsTaZMusV0FUOzfI5b7AkoOOaWeWEUT9Cg7p", "fYosGWfk9CjaviIoo5BRh0x3ygXXS5yAHdzzEQ5w");
+    Parse.initialize("NqximxNgr0SHfBnzlttUwbmIRuFJfWV6nea9N5jI", "0KitXvzwMe4NPk64VUeirTTJE4FqpTsdcPdgEnTs");
+    //Parse.initialize("Dd6QnsTaZMusV0FUOzfI5b7AkoOOaWeWEUT9Cg7p", "fYosGWfk9CjaviIoo5BRh0x3ygXXS5yAHdzzEQ5w");
 
-	function startSync() {
-		Parse.Cloud.run('sync', {}, {
-		  success: function(result) {
-				fetchData();
-		  },
-		  error: function(error) {
-				document.getElementById('results').innerHTML = "<li class='list-group-item'>There was an error: " + error.message + " ("+ error.code +")</li>";
-		  }
-		});
-	}
+    function startSync() {
+        Parse.Cloud.run('sync', {}, {
+            success: function(result) {
+                fetchData();
+            },
+            error: function(error) {
+                document.getElementById('results').innerHTML = "<li class='list-group-item'>There was an error: " + error.message + " ("+ error.code +")</li>";
+            }
+        });
+    }
 
-	function fetchData() {
-		document.getElementById('results').innerHTML = "<li class='list-group-item'>Fetching your data...</li>";
+    function fetchData() {
+        document.getElementById('results').innerHTML = "<li class='list-group-item'>Fetching your data...</li>";
 
-		var Sentiment = Parse.Object.extend("Sentiment");
-		var query = new Parse.Query(Sentiment);
-		query.find({
-		  success: function(sentiments) {
-				var html = "";
-				for (var i = 0; i < sentiments.length; i++) {
-					var s = sentiments[i];
-					html += "<li class='list-group-item'>"+ s.get('fb_id') +": "+ s.get('text') +"</li>";
-				}
-				document.getElementById('results').innerHTML = html;
-		  },
-		  error: function(object, error) {
-				document.getElementById('results').innerHTML = "<li class='list-group-item'>There was an error: " + error.message + " ("+ error.code +")</li>";
-		  }
-		});
-	}
-	fetchData();
+
+        var Aggregate = Parse.Object.extend("Aggregate");
+        var query = new Parse.Query(Aggregate);
+
+        query.find({
+            success: function(hourlyData) {
+
+                document.getElementById('user-name').innerHTML = Parse.User.current().get('firstName'); //TODO : put user's actual name
+
+                var html = "";
+
+                //initial part of the table html
+
+
+                var DateVector = [ ];
+                var sumVector = [ ];
+                var countVector = [ ];
+                var dateLabelVector = [ ];
+
+                var now = new Date();
+
+
+                for (var i = 0;i<7;i++){
+                    now = new Date();
+                    now.setDate(now.getDate()-i);
+                    DateVector[i] = now;
+
+                    console.log(DateVector[i].toString());
+                    sumVector[i] = 0;
+                    countVector[i] = 0;
+                    dateLabelVector[i] = DateVector[i].toDateString();//[i].getDate() + "/" + (DateVector[i].getMonth()+1);
+
+                }
+
+
+
+                for (var i = 0; i < hourlyData.length; i++) {
+                    var s = hourlyData[i];
+                    var dataDate = s.get('date');
+
+
+                    html += "<li class='list-group-item'>"+ s.get('date') +" : "+ s.get('mood') +" : " + s.get('text')+ "</li>";
+
+                    for (var j = 0;j<7;j++){
+                        if(
+                                (dataDate.getDate()==DateVector[j].getDate()) &&
+                                (dataDate.getMonth()==DateVector[j].getMonth()) &&
+                                (dataDate.getFullYear()==DateVector[j].getFullYear())
+                          ){
+                            console.log('Matched text ' + s.get('text')+ ' with date ' + DateVector[j]);
+                            sumVector[j] += s.get('mood');
+                            countVector[j]++;
+                        }
+                    }
+                }
+                // finished aggregating into last daily buckets for last 7 days,now display images based on average
+                var tableHtml = "    <table class='table'><thead><tr><th>Date</th><th>Mood</th><th>Mood Image</th></tr></thead><tbody>";
+                for (var j = 0;j<7;j++) {
+                    //construct the table rows with happy, neutral, sad images and dates
+                    var goodPoint = 0.5;
+                    var badPoint = 0;
+
+
+                    var imageUrl;
+                    var average = sumVector[j]/countVector[j];
+
+                    if((average>=-1) && (average<badPoint)){
+                        imageUrl = "images/sad.png";
+                    }
+                    else{
+                        if((average>=badPoint) && (average<goodPoint)) {
+                            imageUrl = "images/neutral.png";
+                        }
+                        else{
+                            imageUrl = "images/happy.png";
+                        }
+
+
+                    }
+                    imageHtml= "<img src='"+ imageUrl +"'  class= 'mood-image'"
+                    tableHtml += "<tr><td>"+dateLabelVector[j] + "</td><td>"+average.toFixed(2) +"</td><td>"+imageHtml+"</td></tr>";
+
+                    console.log('For date ' + dateLabelVector[j] + ' average mood of ' + countVector[j] + ' posts is ' + sumVector[j]/countVector[j]);
+
+                }
+
+                //final part of the table html
+                tableHtml += " </tbody></table>"
+
+                document.getElementById('results').innerHTML =  tableHtml;
+
+
+            },
+            error: function(object, error) {
+                document.getElementById('results').innerHTML = "<li class='list-group-item'>There was an error: " + error.message + " ("+ error.code +")</li>";
+            }
+        });
+    }
+    fetchData();
 </script>
 </body>
 </html>
