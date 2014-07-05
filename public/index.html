@@ -151,7 +151,7 @@
 </div>
 
 <div id="panel_logged_in" style="display:none">
-	<button onclick="startSync()">Show me my mood!</button>
+	<button onclick="fetchData()">Show me my mood!</button>
 	<div id="mood">
 	</div>
 </div>
@@ -185,6 +185,7 @@
 
 <script type="text/javascript">
     Parse.initialize("NqximxNgr0SHfBnzlttUwbmIRuFJfWV6nea9N5jI", "0KitXvzwMe4NPk64VUeirTTJE4FqpTsdcPdgEnTs");
+    //Parse.initialize("Dd6QnsTaZMusV0FUOzfI5b7AkoOOaWeWEUT9Cg7p", "fYosGWfk9CjaviIoo5BRh0x3ygXXS5yAHdzzEQ5w");
 
 /*    var TestObject = Parse.Object.extend("TestObject");
     var testObject = new TestObject();
@@ -201,10 +202,28 @@
 		document.getElementById('mood').innerHTML = "Fetching your mood...";
 		Parse.Cloud.run('sync', {}, {
 		  success: function(result) {
-				document.getElementById('mood').innerHTML = result;
+				fetchData();
 		  },
 		  error: function(error) {
-				document.getElementById('mood').innerHTML = "There was an error: " + error;
+				document.getElementById('mood').innerHTML = "There was an error: " + error.message + " ("+ error.code +")";
+		  }
+		});
+	}
+
+	function fetchData() {
+		var Sentiment = Parse.Object.extend("Sentiment");
+		var query = new Parse.Query(Sentiment);
+		query.find({
+		  success: function(sentiments) {
+				var html = "";
+				for (var i = 0; i < sentiments.length; i++) {
+					var s = sentiments[i];
+					html += "<div>"+ s.get('fb_id') +": "+ s.get('text') +"</div>"
+				}
+				document.getElementById('mood').innerHTML = html;
+		  },
+		  error: function(object, error) {
+				document.getElementById('mood').innerHTML = "There was an error: " + error.message + " ("+ error.code +")";
 		  }
 		});
 	}

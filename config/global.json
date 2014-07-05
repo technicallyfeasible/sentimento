@@ -4,6 +4,10 @@
             "applicationId": "NqximxNgr0SHfBnzlttUwbmIRuFJfWV6nea9N5jI", 
             "masterKey": "q957lsipWRM422Us8SREo9ZLwoGx2GgTJXXYFIr4"
         }, 
+        "Sentimento-j": {
+            "applicationId": "Dd6QnsTaZMusV0FUOzfI5b7AkoOOaWeWEUT9Cg7p", 
+            "masterKey": "leIErRkNSfhcsprawttM8OAtzZU6QKc5Hy1HkKRK"
+        }, 
         "_default": {
             "link": "Sentimento"
         }
