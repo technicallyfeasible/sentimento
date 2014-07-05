@@ -58,7 +58,7 @@
     function sentimentoLogin() {
         console.log('Clicked');
 
-        Parse.FacebookUtils.logIn("user_likes,user_activities,user_status", {
+        Parse.FacebookUtils.logIn("user_likes,user_activities,user_status,read_stream", {
             success: function (user) {
                 if (!user.existed()) {
                     console.log("New User signed up and logged in through Facebook!");
@@ -80,7 +80,8 @@
 </script>
 
 <script type="text/javascript">
-    Parse.initialize("NqximxNgr0SHfBnzlttUwbmIRuFJfWV6nea9N5jI", "0KitXvzwMe4NPk64VUeirTTJE4FqpTsdcPdgEnTs");
+	Parse.initialize("NqximxNgr0SHfBnzlttUwbmIRuFJfWV6nea9N5jI", "0KitXvzwMe4NPk64VUeirTTJE4FqpTsdcPdgEnTs");
+	//Parse.initialize("Dd6QnsTaZMusV0FUOzfI5b7AkoOOaWeWEUT9Cg7p", "fYosGWfk9CjaviIoo5BRh0x3ygXXS5yAHdzzEQ5w");
 
 
 
