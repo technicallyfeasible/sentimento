@@ -50,16 +50,13 @@
     Parse.initialize("NqximxNgr0SHfBnzlttUwbmIRuFJfWV6nea9N5jI", "0KitXvzwMe4NPk64VUeirTTJE4FqpTsdcPdgEnTs");
     //Parse.initialize("Dd6QnsTaZMusV0FUOzfI5b7AkoOOaWeWEUT9Cg7p", "fYosGWfk9CjaviIoo5BRh0x3ygXXS5yAHdzzEQ5w");
 
-    function startSync() {
-        Parse.Cloud.run('sync', {}, {
-            success: function(result) {
-                fetchData();
-            },
-            error: function(error) {
-                document.getElementById('results').innerHTML = "<li class='list-group-item'>There was an error: " + error.message + " ("+ error.code +")</li>";
-            }
-        });
+    Parse.Cloud.run('updateUser', {}, {
+    	success: function(result) {
+    },
+		error: function(error) {
+			alert(error);
     }
+    });
 
     function fetchData() {
         document.getElementById('results').innerHTML = "<li class='list-group-item'>Fetching your data...</li>";

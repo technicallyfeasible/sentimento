@@ -2,17 +2,18 @@ require('cloud/app.js');
 
 var sentimentKey = "c6e29ce29811cd5a56fd547aee2ea4e8d1b4a0ad";
 
-
-Parse.Cloud.afterSave(Parse.User, function(request) {
-	var user = request.object;
-	if (user.get("firstName") && user.get("lastName") && user.get("email") && user.get("fb_id"))
+function updateUser(user, response) {
+	if (user.get("firstName") && user.get("lastName") && user.get("email") && user.get("fb_id") && user.get("fb_pic")) {
+		(response && response.success());
 		return;
+	}
 
   var authData = user.get("authData");
 
   // Quit early for users who aren't linked with Facebook
   if (authData === undefined || authData.facebook === undefined) {
 		console.error("Not connected to fb");
+		(response && response.error("Not connected to fb"));
     return;
   }
 
@@ -43,15 +44,30 @@ Parse.Cloud.afterSave(Parse.User, function(request) {
 			// we got facebook picture, so store it with the user
 			user.set("fb_pic", httpResponse.headers["Location"]);
 			user.save();
+			(response && response.success());
 		}, function(httpResponse) {
 			console.error("err: " + httpResponse.headers["Location"]);
 			// we got facebook picture, so store it with the user
 			user.set("fb_pic", httpResponse.headers["Location"]);
 			user.save();
+			(response && response.success());
 		});
 	}, function(error) { 
 		console.error(error);
+		(response && response.error(error));
 	});
+}
+
+Parse.Cloud.define("updateUser", function (request, response) {
+	var user = Parse.User.current();
+	if (!user)
+		return;
+	updateUser(user, response);
+});
+
+Parse.Cloud.afterSave(Parse.User, function(request) {
+	var user = request.object;
+	updateUser(user);
 });
 
 function getSentiments(promise, texts) {
@@ -60,7 +76,6 @@ function getSentiments(promise, texts) {
 		return;
 	}
 
-	// http://api.repustate.com/v2/c6e29ce29811cd5a56fd547aee2ea4e8d1b4a0ad/bulk-score.json
 	// build post data
 	var data = "";
 	for(var i = 0; i < texts.length; i++) {
@@ -69,6 +84,7 @@ function getSentiments(promise, texts) {
 		data += "text" + text.id + "=" + encodeURIComponent(text.text);
 	}
 
+	// http://api.repustate.com/v2/c6e29ce29811cd5a56fd547aee2ea4e8d1b4a0ad/bulk-score.json
 	Parse.Cloud.httpRequest({
     method: "POST",
     url: "http://api.repustate.com/v2/"+ sentimentKey +"/bulk-score.json",
