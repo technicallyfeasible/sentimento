@@ -21,6 +21,7 @@
 <script type="text/javascript">
 </script>
 
+<button onclick="startSync();">Start sync</button>
 
 <h1>Here's your data</h1>
 <ul id="results" class="list-group">
@@ -56,7 +57,7 @@
 				var html = "";
 				for (var i = 0; i < sentiments.length; i++) {
 					var s = sentiments[i];
-					html += "<li class='list-group-item'>"+ s.get('fb_id') +": "+ s.get('text') +"</li>";
+					html += "<li class='list-group-item'>"+ s.get('mood') +": "+ s.get('text') +"</li>";
 				}
 				document.getElementById('results').innerHTML = html;
 		  },
@@ -65,7 +66,6 @@
 		  }
 		});
 	}
-	fetchData();
 </script>
 </body>
 </html>
