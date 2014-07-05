@@ -1,54 +1,100 @@
 require('cloud/app.js');
 
 Parse.Cloud.afterSave(Parse.User, function(request) {
-	var user = Parse.User.current();
-	if (!user.existed())
-		console.error("user signed up: " + user.id);
-	else
-		console.error("user was saved: " + user.id);
+	var user = request.object;
+	if (user.get("firstName") && user.get("lastName") && user.get("email"))
+		return;
+
+  var authData = user.get("authData");
+
+  // Quit early for users who aren't linked with Facebook
+  if (authData === undefined || authData.facebook === undefined) {
+		console.error("Not connected to fb");
+    return;
+  }
+
+	Parse.Cloud.httpRequest({
+    method: "GET",
+    url: "https://graph.facebook.com/me",
+    params: {
+      access_token: authData.facebook.access_token,
+      fields: "email,first_name,last_name",
+    },
+	  success: function(httpResponse) {
+			var fbData = JSON.parse(httpResponse.text);
+			// we got facebook data, so store it with the user
+			user.set("email", fbData.email);
+			user.set("firstName", fbData.first_name);
+			user.set("lastName", fbData.last_name);
+			user.save();
+	  },
+	  error: function(httpResponse) {
+	  }
+  });
 });
 
 
 Parse.Cloud.define("sync", function (request, response) {
 	var user = Parse.User.current();
-	if (!user)
-		console.error("no user logged in");
-	else
-		console.error(user.id);
-	if (request.user)
-		console.error(request.user.id);
-	response.success("You are " + (user ? user.id : " not logged in."));
+	if (!user) {
+		response.error("Not logged in");
+		return;
+	}
+
+	Parse.Cloud.useMasterKey();
+
+  // Quit early for users who aren't linked with Facebook
+  var authData = user.get("authData");
+  if (authData === undefined || authData.facebook === undefined) {
+		response.error("Not connected to fb");
+    return;
+  }
+
+	Parse.Cloud.httpRequest({
+    method: "GET",
+    url: "https://graph.facebook.com/"+ authData.id +"/posts",
+    params: {
+      access_token: authData.facebook.access_token,
+			fields: "type,message"
+    },
+	  success: function(httpResponse) {
+			var fbData = JSON.parse(httpResponse.text);
+
+			var Sentiment = Parse.Object.extend("Sentiment");
+			var query = new Parse.Query(Sentiment);
+			for(var i = 0; i < fbData.length; i++) {
+				var data = fbData[i];
+				if (!data.id || !data.message || !data.type) continue;
+
+				/*query.get("xWMyZ4YEGZ", {
+				  success: function(gameScore) {
+				    // The object was retrieved successfully.
+				  },
+				  error: function(object, error) {
+				    // The object was not retrieved successfully.
+				    // error is a Parse.Error with an error code and description.
+				  }
+				});*/
+
+				var sentiment = new Sentiment();
+				sentiment.set("id", data.id)
+				sentiment.set("type", data.type)
+				sentiment.set("text", data.message)
+				sentiment.save();
+			}
+
+			response.success("done");
+	  },
+	  error: function(httpResponse) {
+			response.error(httpResponse.text);
+	  }
+  });
 });
 
 
-//soms
-
-
-//endsoms
-
-/*Parse.Cloud.job("sync", function(request, status) {
+Parse.Cloud.job("sync", function(request, status) {
 	// Set up to modify user data
 	Parse.Cloud.useMasterKey();
-
-	Parse.FacebookUtils.init({
-		appId: '235971699946352',                        // App ID from the app dashboard
-		channelUrl: '', // Channel file for x-domain comms
-		status: true,                                 // Check Facebook Login status
-		xfbml: true                                  // Look for social plugins on the page
-	});
-
-	Parse.FacebookUtils.logIn(null, {
-	  success: function(user) {
-		if (!user.existed()) {
-		  alert("User signed up and logged in through Facebook!");
-		} else {
-		  alert("User logged in through Facebook!");
-		}
-	  },
-	  error: function(user, error) {
-		alert("User cancelled the Facebook login or did not fully authorize.");
-	  }
-	});
 
   var counter = 0;
   // Query for all users
@@ -70,4 +116,3 @@ Parse.Cloud.define("sync", function (request, response) {
     status.error("Uh oh, something went wrong.");
   });
 });
-*/
