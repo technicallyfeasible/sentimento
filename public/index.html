@@ -86,7 +86,7 @@
 		 	  FB.getLoginStatus(function(response) {
 		  	    if (response.status === 'connected') {
 		        	// user logged in and linked to app
-        			alert("already logged in");
+							document.getElementById('panel_logged_in').style.display = "";
     		  }
 		   });
     };
@@ -119,11 +119,13 @@
             success: function(user) {
                 if (!user.existed()) {
                     alert("User signed up and logged in through Facebook!");
+										document.getElementById('panel_logged_in').style.display = "";
                 } else {
                     alert("User logged in through Facebook!");
                 }
             },
             error: function(user, error) {
+								document.getElementById('panel_logged_in').style.display = "none";
                 alert("User cancelled the Facebook login or did not fully authorize.");
             }
         });
@@ -146,6 +148,12 @@
 <!--</fb:login-button>-->
 
 <div id="status">
+</div>
+
+<div id="panel_logged_in" style="display:none">
+	<button onclick="startSync()">Show me my mood!</button>
+	<div id="mood">
+	</div>
 </div>
 
 
@@ -178,7 +186,7 @@
 <script type="text/javascript">
     Parse.initialize("NqximxNgr0SHfBnzlttUwbmIRuFJfWV6nea9N5jI", "0KitXvzwMe4NPk64VUeirTTJE4FqpTsdcPdgEnTs");
 
-    var TestObject = Parse.Object.extend("TestObject");
+/*    var TestObject = Parse.Object.extend("TestObject");
     var testObject = new TestObject();
     testObject.save({foo: "bar"}, {
         success: function (object) {
@@ -187,7 +195,19 @@
         error: function (model, error) {
             $(".error").show();
         }
-    });
+    });*/
+
+	function startSync() {
+		document.getElementById('mood').innerHTML = "Fetching your mood...";
+		Parse.Cloud.run('sync', {}, {
+		  success: function(result) {
+				document.getElementById('mood').innerHTML = result;
+		  },
+		  error: function(error) {
+				document.getElementById('mood').innerHTML = "There was an error: " + error;
+		  }
+		});
+	}
 </script>
 </body>
 
