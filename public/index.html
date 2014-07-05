@@ -51,6 +51,13 @@
         $(".error").show();
       }
     });
+Parse.Cloud.run('sync', {}, {
+  success: function(result) {
+    alert('success');
+  },
+  error: function(error) {
+  }
+});
   </script>
 </body>
 

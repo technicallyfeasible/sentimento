@@ -10,6 +10,17 @@ app.use(express.bodyParser());    // Middleware for reading request body
 
 // This is an example of hooking up a request handler with a specific request
 // path and HTTP verb using the Express routing API.
+app.get('/', function(req, res) {
+	var user = Parse.User.current();
+	console.error("User: " +  user);
+	if (!user)
+	  res.render('hello', { message: 'Login here' });
+	else
+		res.render('hello', { message: 'Congrats, you just logged in!' });
+});
+
+// This is an example of hooking up a request handler with a specific request
+// path and HTTP verb using the Express routing API.
 app.get('/hello', function(req, res) {
   res.render('hello', { message: 'Congrats, you just set up your app!' });
 });
