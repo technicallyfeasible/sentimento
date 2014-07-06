@@ -2,19 +2,20 @@ require('cloud/app.js');
 
 var sentimentKey = "c6e29ce29811cd5a56fd547aee2ea4e8d1b4a0ad";
 
-function updateUser(user, response) {
+function updateUser(user) {
+	var promise = new Parse.Promise();
 	if (user.get("firstName") && user.get("lastName") && user.get("email") && user.get("fb_id") && user.get("fb_pic")) {
-		(response && response.success());
-		return;
+		promise.resolve();
+		return promise;
 	}
 
   var authData = user.get("authData");
 
-  // Quit early for users who aren't linked with Facebook
+  // Quit early for users who are not linked with Facebook
   if (authData === undefined || authData.facebook === undefined) {
 		console.error("Not connected to fb");
-		(response && response.error("Not connected to fb"));
-    return;
+		promise.reject("Not connected to fb");
+    return promise;
   }
 
 	console.error("Fetching new FB data for user " + user.id);
@@ -27,6 +28,8 @@ function updateUser(user, response) {
       fields: "email,first_name,last_name",
     }
   }).then(function(httpResponse) {
+		// fetch picture
+		console.error(httpResponse.text);
 		var fbData = JSON.parse(httpResponse.text);
 		// we got facebook data, so store it with the user
 		user.set("fb_id", fbData.id);
@@ -35,7 +38,7 @@ function updateUser(user, response) {
 		user.set("lastName", fbData.last_name);
 		user.save();
 
-		Parse.Cloud.httpRequest({
+		return Parse.Cloud.httpRequest({
  	    method: "GET",
  	    url: "https://graph.facebook.com/me/picture",
  	    params: {
@@ -46,25 +49,32 @@ function updateUser(user, response) {
 			// we got facebook picture, so store it with the user
 			user.set("fb_pic", httpResponse.headers["Location"]);
 			user.save();
-			(response && response.success());
 		}, function(httpResponse) {
 			console.error("err: " + httpResponse.headers["Location"]);
 			// we got facebook picture, so store it with the user
 			user.set("fb_pic", httpResponse.headers["Location"]);
 			user.save();
-			(response && response.success());
 		});
+	//}).then(function(){
+		// fetch friends
+	}).then(function() {
+		promise.resolve();
 	}, function(error) { 
 		console.error(error);
-		(response && response.error(error));
+		promise.reject(error);
 	});
+	return promise;
 };
 
 Parse.Cloud.define("updateUser", function (request, response) {
 	var user = Parse.User.current();
 	if (!user)
 		return;
-	updateUser(user, response);
+	updateUser(user).then(function(){
+		response.success();
+	}, function(error){
+		response.error(error);
+	});
 });
 
 Parse.Cloud.afterSave(Parse.User, function(request) {
