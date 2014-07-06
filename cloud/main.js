@@ -4,7 +4,7 @@ var sentimentKey = "c6e29ce29811cd5a56fd547aee2ea4e8d1b4a0ad";
 
 function updateUser(user) {
 	var promise = new Parse.Promise();
-	if (user.get("firstName") && user.get("lastName") && user.get("email") && user.get("fb_id") && user.get("fb_pic")) {
+	if (user.get("firstName") && user.get("lastName") && user.get("fb_id") && user.get("fb_pic")) {
 		promise.resolve();
 		return promise;
 	}
@@ -19,6 +19,9 @@ function updateUser(user) {
   }
 
 	console.error("Fetching new FB data for user " + user.id);
+	// ACL to restrict write to user, and public read access
+	var owner_acl = new Parse.ACL(user);
+	var Friend = Parse.Object.extend("Friend");
 
 	Parse.Cloud.httpRequest({
     method: "GET",
@@ -67,9 +70,49 @@ function updateUser(user) {
  	    params: {
  	      access_token: authData.facebook.access_token
  	    }
+		}).then(function() {
+			// delete all existing friends
+			var friendQuery = Parse.Query(Friend);
+			return friendQuery.find().then(function(friends) {
+				return Parse.Object.destroyAll(friends);
+			});
 		}).then(function(httpResponse) {
-			console.error("got friends");
-			console.error(httpResponse.text);
+			var fbData = JSON.parse(httpResponse.text);
+			console.error("got friends: " + fbData.data.length);
+			
+			// fetch existing users
+			Parse.Cloud.useMasterKey();
+			var friendIds = [];
+			for (var i = 0; i < fbData.data.length; i++) {
+				friendIds.push(fbData.data[i].id);
+			}
+			var userQuery = new Parse.Query(Parse.User);
+			userQuery.containedIn("fb_id", friendIds);
+			return userQuery.find().then(function(users) {
+				console.error("got users as friends: " + users.length);
+				var usersById = {};
+				for(var i = 0; i < users.length; i++) {
+					usersById[users[i].get("fb_id")] = users[i];
+				}
+				// add friends
+				var friends = [];
+				for (var i = 0; i < fbData.data.length; i++) {
+					var fbFriend = fbData.data[i];
+					var friend = new Friend();
+					friend.set("userId", fbFriend.id);
+					friend.setACL(owner_acl);
+					// set additional properties
+					var user = usersById[fbFriends.id];
+					if (user) {
+						friend.set("firstName", user.get("firstName"));
+						friend.set("lastName", user.get("lastName"));
+						friend.set("imageUrl", user.get("fb_pic"));
+					}
+					friends.push(friend);
+				}
+				console.error("saving friends: " + friends.length);
+				return Parse.Object.saveAll(friends);
+			});
 		});
 	}).then(function() {
 		promise.resolve();
