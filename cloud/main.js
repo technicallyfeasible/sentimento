@@ -62,6 +62,12 @@ function updateUser(user) {
 			subPromise.resolve();
 		});
 		return subPromise;
+	}).then(function() {
+			// delete all existing friends
+			var friendQuery = new Parse.Query(Friend);
+			return friendQuery.find().then(function(friends) {
+				return Parse.Object.destroyAll(friends);
+			});
 	}).then(function(){
 		// fetch friends
 		return Parse.Cloud.httpRequest({
@@ -70,12 +76,6 @@ function updateUser(user) {
  	    params: {
  	      access_token: authData.facebook.access_token
  	    }
-		}).then(function() {
-			// delete all existing friends
-			var friendQuery = Parse.Query(Friend);
-			return friendQuery.find().then(function(friends) {
-				return Parse.Object.destroyAll(friends);
-			});
 		}).then(function(httpResponse) {
 			var fbData = JSON.parse(httpResponse.text);
 			console.error("got friends: " + fbData.data.length);
@@ -102,7 +102,7 @@ function updateUser(user) {
 					friend.set("userId", fbFriend.id);
 					friend.setACL(owner_acl);
 					// set additional properties
-					var user = usersById[fbFriends.id];
+					var user = usersById[fbFriend.id];
 					if (user) {
 						friend.set("firstName", user.get("firstName"));
 						friend.set("lastName", user.get("lastName"));
