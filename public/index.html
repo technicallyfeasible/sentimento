@@ -107,7 +107,7 @@
     function sentimentoLogin() {
         console.log('Clicked');
 
-        Parse.FacebookUtils.logIn("user_likes,user_activities,user_status,read_stream", {
+        Parse.FacebookUtils.logIn("user_friends,user_likes,user_activities,user_status,read_stream", {
             success: function (user) {
                 if (!user.existed()) {
                     console.log("New User signed up and logged in through Facebook!");
