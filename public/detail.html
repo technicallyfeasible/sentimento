@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bootstrap 101 Template</title>
+    <title>Sentimento</title>
 
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -32,7 +32,10 @@
     Let's see how your mood was over the last week from your life-logs
 </h2>
 
-<button id="refresh_button" onclick="doSync();">refresh</button>
+<div id="actions">
+	<button onclick="doSync();">refresh</button>
+	<button onclick="logout();">logout</button>
+<div>
 
 <ul id="results" class="list-group">
 </ul>
@@ -50,10 +53,14 @@
     //Parse.initialize("Dd6QnsTaZMusV0FUOzfI5b7AkoOOaWeWEUT9Cg7p", "fYosGWfk9CjaviIoo5BRh0x3ygXXS5yAHdzzEQ5w");
 
 		function updateUser() {
-			Parse.Cloud.run('updateUser', {}, { error: function(error) { alert(error); } });
+			Parse.Cloud.run('updateUser', {}, { error: function(error) { alert(JSON.stringify(error)); } });
 		}
 		function doSync() {
-			Parse.Cloud.run('sync', {}, { success: function() { fetchData(); }, error: function(error) { alert(error); } });
+			Parse.Cloud.run('sync', {}, { success: function() { fetchData(); }, error: function(error) { alert(JSON.stringify(error)); } });
+		}
+		function logout() {
+			Parse.User.logOut();
+			window.location.href = "index.html";
 		}
 
     function fetchData() {
@@ -163,8 +170,10 @@
 			updateUser();
     	fetchData();
 		}
-		else
-			document.getElementById("refresh_button").style.display = "none";
+		else {
+			document.getElementById("actions").style.display = "none";
+			window.location.href = "index.html";
+		}
 </script>
 </body>
 </html>

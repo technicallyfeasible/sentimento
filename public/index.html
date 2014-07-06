@@ -23,82 +23,6 @@
 
 <body>
 
-<script>
-
-    window.fbAsyncInit = function () {
-        Parse.FacebookUtils.init({
-            appId: '235971699946352', // Facebook App ID
-            channelUrl: '//sentimento.parseapp.com/channel.html', // Channel File
-            cookie: true, // enable cookies to allow Parse to access the session
-            xfbml: true  // parse XFBML
-        });
-
-        // Additional init code here
-        FB.getLoginStatus(function (response) {
-            if (response.status === 'connected') {
-                // user logged in and linked to app
-                document.getElementById('panel_logged_in').style.display = "";
-            }
-        });
-    };
-
-
-    // Load the SDK asynchronously
-    (function (d, s, id) {
-        var js, fjs = d.getElementsByTagName(s)[0];
-        if (d.getElementById(id)) {
-            return;
-        }
-        js = d.createElement(s);
-        js.id = id;
-        js.src = "//connect.facebook.net/en_US/all.js";
-        fjs.parentNode.insertBefore(js, fjs);
-    }(document, 'script', 'facebook-jssdk'));
-
-    function sentimentoLogin() {
-        console.log('Clicked');
-
-        Parse.FacebookUtils.logIn("user_likes,user_activities,user_status,read_stream", {
-            success: function (user) {
-                if (!user.existed()) {
-                    console.log("New User signed up and logged in through Facebook!");
-                    document.getElementById('panel_logged_in').style.display = "";
-                    window.location.href = "detail.html";
-                } else {
-                    console.log("User exists already and has been logged in through Facebook!");
-                    window.location.href = "detail.html";
-                }
-            },
-            error: function (user, error) {
-                document.getElementById('panel_logged_in').style.display = "none";
-                alert("User cancelled the Facebook login or did not fully authorize.");
-            }
-        });
-    }
-
-
-</script>
-
-<script type="text/javascript">
-	Parse.initialize("NqximxNgr0SHfBnzlttUwbmIRuFJfWV6nea9N5jI", "0KitXvzwMe4NPk64VUeirTTJE4FqpTsdcPdgEnTs");
-	//Parse.initialize("Dd6QnsTaZMusV0FUOzfI5b7AkoOOaWeWEUT9Cg7p", "fYosGWfk9CjaviIoo5BRh0x3ygXXS5yAHdzzEQ5w");
-
-
-
-    function startSync() {
-        document.getElementById('mood').innerHTML = "Fetching your mood...";
-        Parse.Cloud.run('sync', {}, {
-            success: function(result) {
-                document.getElementById('mood').innerHTML = result;
-            },
-            error: function(error) {
-                document.getElementById('mood').innerHTML = "There was an error: " + error;
-            }
-        });
-    }
-</script>
-
-
 
 <div class="container-full">
 
@@ -154,15 +78,57 @@
 <script src="js/scripts.js"></script>
 
 
+<script type="text/javascript">
+	Parse.initialize("NqximxNgr0SHfBnzlttUwbmIRuFJfWV6nea9N5jI", "0KitXvzwMe4NPk64VUeirTTJE4FqpTsdcPdgEnTs");
+	//Parse.initialize("Dd6QnsTaZMusV0FUOzfI5b7AkoOOaWeWEUT9Cg7p", "fYosGWfk9CjaviIoo5BRh0x3ygXXS5yAHdzzEQ5w");
+
+    window.fbAsyncInit = function () {
+        Parse.FacebookUtils.init({
+            appId: '235971699946352', // Facebook App ID
+            channelUrl: '//sentimento.parseapp.com/channel.html', // Channel File
+            cookie: true, // enable cookies to allow Parse to access the session
+            xfbml: true  // parse XFBML
+        });
+    };
 
 
+    // Load the SDK asynchronously
+    (function (d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) {
+            return;
+        }
+        js = d.createElement(s);
+        js.id = id;
+        js.src = "//connect.facebook.net/en_US/all.js";
+        fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
 
+    function sentimentoLogin() {
+        console.log('Clicked');
 
+        Parse.FacebookUtils.logIn("user_likes,user_activities,user_status,read_stream", {
+            success: function (user) {
+                if (!user.existed()) {
+                    console.log("New User signed up and logged in through Facebook!");
+                    window.location.href = "detail.html";
+                } else {
+                    console.log("User exists already and has been logged in through Facebook!");
+                    window.location.href = "detail.html";
+                }
+            },
+            error: function (user, error) {
+            }
+        });
+    }
 
+		// if user is logged in then continue to detail
+		var user = Parse.User.current();
+		if (user && user.authenticated()) {
+       window.location.href = "detail.html";
+		}
 
-
-
-
+</script>
 
 
 

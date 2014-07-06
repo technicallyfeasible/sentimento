@@ -17,6 +17,8 @@ function updateUser(user, response) {
     return;
   }
 
+	console.error("Fetching new FB data for user " + user.id);
+
 	Parse.Cloud.httpRequest({
     method: "GET",
     url: "https://graph.facebook.com/me",
@@ -90,7 +92,7 @@ function getSentiments(promise, texts) {
     url: "http://api.repustate.com/v2/"+ sentimentKey +"/bulk-score.json",
     body: data,
 	  success: function(httpResponse) {
-			console.error(httpResponse.text);
+			console.error("Sentiments fetched");
 			var result = JSON.parse(httpResponse.text);
 			promise.resolve(result);
 	  },
@@ -102,10 +104,11 @@ function getSentiments(promise, texts) {
 };
 
 
-function sync(user, request, response) {
+function sync(user) {
+	var promise = new Parse.Promise();
 	if (!user) {
-		response.error("Not logged in");
-		return;
+		promise.reject("No user");
+		return promise;
 	}
 
 	//Parse.Cloud.useMasterKey();
@@ -113,8 +116,8 @@ function sync(user, request, response) {
   // Quit early for users who aren't linked with Facebook
   var authData = user.get("authData");
   if (authData === undefined || authData.facebook === undefined) {
-		response.error("Not connected to fb: " + user.id);
-    return;
+		promise.reject("Not connected to fb: " + user.id);
+    return promise;
   }
 
 	// get data from 7 days ago
@@ -171,7 +174,7 @@ function sync(user, request, response) {
 
 						var sentiment = new Sentiment();
 						sentiment.set("fb_id", data.id)
-						sentiment.set("date", data.created_time)
+						sentiment.set("date", new Date(data.created_time))
 						sentiment.set("type", data.type)
 						sentiment.set("text", data.message)
 						sentiment.setACL(owner_acl);
@@ -180,10 +183,10 @@ function sync(user, request, response) {
 					}
 
 					// fetch sentiment values for all texts
-					var promise = new Parse.Promise();
-					getSentiments(promise, texts);
+					var promise2 = new Parse.Promise();
+					getSentiments(promise2, texts);
 
-					promise.then(function(scores) {
+					promise2.then(function(scores) {
 						if (scores) {
 							// got our sentiments, store in db
 							for(var i = 0; i < scores.results.length; i++) {
@@ -193,66 +196,94 @@ function sync(user, request, response) {
 								sentiment.set("mood", score.score);
 							}
 						}
-						Parse.Object.saveAll(sentiments);
+						console.error("Saving " + sentiments.length);
+						Parse.Object.saveAll(sentiments).then(function() {
+							promise.resolve("done");
+						}, function(error) {
+							console.error(error);
+							promise.reject(error);
+						});
 
-						response.success("done");
 					}, function(error) {
-						response.error(error);
+						promise.reject(error);
 					})
 				},
 				error: function (error) {
-					response.error(error);
+					promise.reject(error);
 				}
 			});
 	  },
 	  error: function(httpResponse) {
-			response.error(httpResponse.text);
+			promise.reject(httpResponse.text);
 	  }
   });
+	return promise;
 };
 
-Parse.Cloud.define("sync", function (request, response) {
-	sync(Parse.User.current(), request, response);
-});
+function aggregate(user) {
+	var promise = new Parse.Promise();
+	if (!user) {
+		promise.reject("No user");
+		return promise;
+	}
 
+	// ACL to restrict write to user, and public read access
+	var owner_acl = new Parse.ACL(user);
 
-Parse.Cloud.job("sync", function(request, status) {
-	// Set up to modify user data
-	Parse.Cloud.useMasterKey();
+	// very simple: fetch all sentiments, delete aggregates and create new aggregates
+	var query = new Parse.Query(Aggregate);
+	var pAggregates = query.find().then(function(aggregates) {
+		Parse.Object.destroyAll(aggregates);
+	});
 
-	var query = new Parse.Query(Parse.User);
-  query.find().then(function(users) {
+	var query = new Parse.Query(Sentiment);
+	var pSentiments = query.find().then(function() {
+	});
 
-		var iterator = function(i) {
-			if (i < users.length) {
-				var user = users[i];
-				var promise = new Parse.Promise();
-				var wrap = {"success": promise.resolve, "error": promise.reject };
-				promise.then(function() {
-					console.log("inner");
-					var promise2 = new Parse.Promise();
-					var wrap2 = {"success": promise2.resolve, "error": promise2.reject };
-					promise2.then(function() {
-						iterator(i + 1);
-					}, function(error) {
-						console.error("Error: " + error);
-						status.error(error);
-					});
-					console.log("Starting sync for user " + user.id);
-					sync(user, request, wrap2);
-				}, function(error) {
-					console.error("Error: " + error);
-					status.error(error);
-				});
-				console.log("Updating user " + user.id);
-				updateUser(user, wrap);
-			}
-			else
-				status.success("done");
-		};
-		iterator(0);
+	// wait for delete and fetch of sentiments and add new aggregates
+	Parse.Promise.when(pAggregates, pSentiments).then(function (aggregates, sentiments) {
+		var minDate = new Date();
+		var maxDate = new Date();
+		for (var i = 0; i < sentiments.length; i++) {
+			var sentiment = sentiments[i];
+			var date = sentiment.get("date");
+			if (!date) continue;
+			if (date < minDate) minDate = date;
+			if (date > maxDate) maxDate = date;
+		}
 
+		var Aggregate = Parse.Object.extend("Aggregate");
+		
+		// create new entries in hour intervals between min and max date
+		var aggregates = [];
+		minDate = new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate(), minDate.getHours(), 0, 0, 0);
+		maxDate = new Date(maxDate.getFullYear(), maxDate.getMonth(), maxDate.getDate(), maxDate.getHours(), 0, 0, 0);
+		while(minDate <= maxDate) {
+			var nextDate = new Date(minDate);
+			nextDate.setHours(nextDate.getHours() + 1);
+			// get sentiments in range
+
+			// add aggregate
+			var aggregate = new Aggregate();
+			aggregate.set();
+			minDate.setHours(minDate.getHours() + 1);
+		}
 	}, function(error) {
-		status.error(error);
+		promise.reject(error);
+	});
+	
+	return promise;
+}
+
+Parse.Cloud.define("sync", function (request, response) {
+	var user = Parse.User.current();
+	sync(user).then(function(){
+		return aggregate(user);
+	}).then(function(result) {
+		response.success(result);
+	}, function(error) {
+		response.error(error);
 	});
 });
+
+
