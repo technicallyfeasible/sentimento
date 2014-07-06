@@ -39,51 +39,7 @@
 
 
 
-<script type="text/javascript">
-    Parse.initialize("NqximxNgr0SHfBnzlttUwbmIRuFJfWV6nea9N5jI", "0KitXvzwMe4NPk64VUeirTTJE4FqpTsdcPdgEnTs");
-    //Parse.initialize("Dd6QnsTaZMusV0FUOzfI5b7AkoOOaWeWEUT9Cg7p", "fYosGWfk9CjaviIoo5BRh0x3ygXXS5yAHdzzEQ5w");
 
-
-    function fetchFriendData() {
-        //document.getElementById('results').innerHTML = "<li class='list-group-item'>Fetching your data...</li>";
-
-
-        var Friends = Parse.Object.extend("Friend");
-        var query = new Parse.Query(Friends);
-
-        query.find({
-            success: function (friendsData) {
-
-//                document.getElementById('user-name').innerHTML = Parse.User.current().get('firstName'); //TODO : put user's actual name
-
-
-                var tableHtml = " <ul data-role='listview' data-split-icon='gear' data-split-theme='a' data-inset='true'>";
-
-                for (var i = 0; i < friendsData.length; i++) {
-                    var friend = friendsData[i];
-                    var imageUrl = friend.get('imageUrl');
-                    var firstName = friend.get('firstName');
-
-                    console.log(firstName + "  " + imageUrl);
-                    
-                    tableHtml+= "	<li><a href='#'>        <img src='../_assets/img/album-bb.jpg'>     <h2>Broken Bells</h2>    <p>Broken Bells</p></a>         <a href='#purchase' data-rel='popup' data-position-to='window' data-transition='pop'>Purchase album</a>     </li>";
-
-                }
-
-                //final part of the table html
-                tableHtml += "</ul> <div data-role='popup' id='purchase' data-theme='a' data-overlay-theme='b' class='ui-content' style='max-width:340px; padding-bottom:2em;'>     <h3>Purchase Album?</h3> <p>Your download will begin immediately on your mobile device when you purchase.</p>     <a href='index.html' data-rel='back' class='ui-shadow ui-btn ui-corner-all ui-btn-b ui-icon-check ui-btn-icon-left ui-btn-inline ui-mini'>Buy: $10.99</a>    <a href='index.html' data-rel='back' class='ui-shadow ui-btn ui-corner-all ui-btn-inline ui-mini'>Cancel</a></div>";
-
-                document.getElementById('sharelist').innerHTML = tableHtml;
-
-
-            },
-            error: function (object, error) {
-                document.getElementById('results').innerHTML = "<li class='list-group-item'>There was an error: " + error.message + " (" + error.code + ")</li>";
-            }
-        });
-    }
-    fetchFriendData();
-</script>
 
 
 </body>
