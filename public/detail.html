@@ -136,7 +136,8 @@
                     var goodPoint = 0.5;
                     var badPoint = 0;
 
-
+										if (countVector[j] == 0)
+											countVector[j] = 1;
                     var imageUrl;
                     var average = sumVector[j]/countVector[j];
 
@@ -156,7 +157,7 @@
                     imageHtml= "<img src='"+ imageUrl +"'  class= 'mood-image'"
                     tableHtml += "<tr><td>"+dateLabelVector[j] + "</td><td>"+average.toFixed(2) +"</td><td>"+imageHtml+"</td></tr>";
 
-                    console.log('For date ' + dateLabelVector[j] + ' average mood of ' + countVector[j] + ' posts is ' + sumVector[j]/countVector[j]);
+                    console.log('For date ' + dateLabelVector[j] + ' average mood of ' + countVector[j] + ' posts is ' + sumVector[j]/(countVector[j]));
 
                 }
 

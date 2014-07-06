@@ -236,10 +236,10 @@ function aggregate(user) {
 	var owner_acl = new Parse.ACL(user);
 
 	// very simple: fetch all sentiments, delete aggregates and create new aggregates
-	var query = new Parse.Query(Aggregate);
-	query.find().then(function(aggregates) {
+	var query = new Parse.Query(Aggregate).limit(500);
+	query.find().then(function(aggs) {
 
-		return Parse.Object.destroyAll(aggregates).then(function() {
+			console.error("found aggregates " + aggs.length);
 
 			var query = new Parse.Query(Sentiment);
 			return query.find().then(function(sentiments) {
@@ -268,26 +268,45 @@ function aggregate(user) {
 				minDate = new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate(), minDate.getHours(), 0, 0, 0);
 				maxDate = new Date(maxDate.getFullYear(), maxDate.getMonth(), maxDate.getDate(), maxDate.getHours(), 0, 0, 0);
 				while(minDate <= maxDate) {
+					// find existing aggregate
+					var aggregate = null;
+					for (var j = 0; j < aggs.length; j++) {
+						var oldDate = aggs[j].get("date");
+						if (oldDate.getTime() != minDate.getTime()) continue;
+						aggregate = aggs[j];
+					}
+
 					var nextDate = new Date(minDate);
-					nextDate.setHours(nextDate.getHours() + 1);
+					nextDate.setHours(nextDate.getHours() + 6);
 					// get sentiments in range
 					var mood = 0, count = 0;
 					for (var j = 0; j < sentiments.length; j++) {
 						var sentiment = sentiments[j];
 						var date = sentiment.get("date");
-						if (date < minDate || date >= nextDate)
+						if (date.getTime() < minDate.getTime() || date.getTime() >= nextDate.getTime())
 							continue
 						mood += sentiment.get("mood") || 0;
 						count++;
 					}
-					if (count > 0) mood /= count;
-					// add aggregate
-					var aggregate = new Aggregate();
-					aggregate.set("date", new Date(minDate));
-					aggregate.set("mood", mood);
-					aggregate.setACL(owner_acl);
-					aggregates.push(aggregate);
-					minDate.setHours(minDate.getHours() + 1);
+					if (count > 0) {
+						mood /= count;
+						// add aggregate
+						if (aggregate == null) {
+							aggregate = new Aggregate();
+							aggregate.set("date", new Date(minDate));
+							aggregate.set("mood", mood);
+							aggregate.setACL(owner_acl);
+							aggregates.push(aggregate);
+						}
+						else if (aggregate.get("mood") != mood) {
+							aggregate.set("mood", mood);
+							aggregate.setACL(owner_acl);
+							aggregates.push(aggregate);
+						}
+					}
+					else if (aggregate != null)
+						aggregate.destroy();
+					minDate.setHours(minDate.getHours() + 6);
 				}
 				console.error("Saving aggregates: " + aggregates.length);
 				Parse.Object.saveAll(aggregates).then(function() {
@@ -297,7 +316,6 @@ function aggregate(user) {
 					promise.reject(error);
 				});
 			});
-		});
 	}, function(error) {
 		promise.reject(error);
 	});
