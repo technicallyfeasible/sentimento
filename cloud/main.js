@@ -220,6 +220,8 @@ function sync(user) {
 	return promise;
 };
 
+
+
 function aggregate(user) {
 	var promise = new Parse.Promise();
 	if (!user) {
@@ -227,47 +229,75 @@ function aggregate(user) {
 		return promise;
 	}
 
+	var Aggregate = Parse.Object.extend("Aggregate");
+	var Sentiment = Parse.Object.extend("Sentiment");
+
 	// ACL to restrict write to user, and public read access
 	var owner_acl = new Parse.ACL(user);
 
 	// very simple: fetch all sentiments, delete aggregates and create new aggregates
 	var query = new Parse.Query(Aggregate);
-	var pAggregates = query.find().then(function(aggregates) {
-		Parse.Object.destroyAll(aggregates);
-	});
+	query.find().then(function(aggregates) {
 
-	var query = new Parse.Query(Sentiment);
-	var pSentiments = query.find().then(function() {
-	});
+		return Parse.Object.destroyAll(aggregates).then(function() {
 
-	// wait for delete and fetch of sentiments and add new aggregates
-	Parse.Promise.when(pAggregates, pSentiments).then(function (aggregates, sentiments) {
-		var minDate = new Date();
-		var maxDate = new Date();
-		for (var i = 0; i < sentiments.length; i++) {
-			var sentiment = sentiments[i];
-			var date = sentiment.get("date");
-			if (!date) continue;
-			if (date < minDate) minDate = date;
-			if (date > maxDate) maxDate = date;
-		}
+			var query = new Parse.Query(Sentiment);
+			return query.find().then(function(sentiments) {
+				console.error("create new aggregates");
 
-		var Aggregate = Parse.Object.extend("Aggregate");
+				var minDate = new Date();
+				var maxDate = new Date();
+				maxDate.setHours(maxDate.getHours() + 1);
+				for (var i = 0; i < sentiments.length; i++) {
+					var sentiment = sentiments[i];
+					var date = sentiment.get("date");
+					if (!date) continue;
+					if (date < minDate) minDate = date;
+					if (date > maxDate) maxDate = date;
+				}
+				console.error(minDate);
+				console.error(maxDate);
+				var xDate = new Date(maxDate);
+				xDate.setDate(xDate.getDate() - 10);
+				if (minDate < xDate)
+					minDate = xDate;
+				console.error(minDate);
 		
-		// create new entries in hour intervals between min and max date
-		var aggregates = [];
-		minDate = new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate(), minDate.getHours(), 0, 0, 0);
-		maxDate = new Date(maxDate.getFullYear(), maxDate.getMonth(), maxDate.getDate(), maxDate.getHours(), 0, 0, 0);
-		while(minDate <= maxDate) {
-			var nextDate = new Date(minDate);
-			nextDate.setHours(nextDate.getHours() + 1);
-			// get sentiments in range
-
-			// add aggregate
-			var aggregate = new Aggregate();
-			aggregate.set();
-			minDate.setHours(minDate.getHours() + 1);
-		}
+				// create new entries in hour intervals between min and max date
+				var aggregates = [];
+				minDate = new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate(), minDate.getHours(), 0, 0, 0);
+				maxDate = new Date(maxDate.getFullYear(), maxDate.getMonth(), maxDate.getDate(), maxDate.getHours(), 0, 0, 0);
+				while(minDate <= maxDate) {
+					var nextDate = new Date(minDate);
+					nextDate.setHours(nextDate.getHours() + 1);
+					// get sentiments in range
+					var mood = 0, count = 0;
+					for (var j = 0; j < sentiments.length; j++) {
+						var sentiment = sentiments[j];
+						var date = sentiment.get("date");
+						if (date < minDate || date >= nextDate)
+							continue
+						mood += sentiment.get("mood") || 0;
+						count++;
+					}
+					if (count > 0) mood /= count;
+					// add aggregate
+					var aggregate = new Aggregate();
+					aggregate.set("date", new Date(minDate));
+					aggregate.set("mood", mood);
+					aggregate.setACL(owner_acl);
+					aggregates.push(aggregate);
+					minDate.setHours(minDate.getHours() + 1);
+				}
+				console.error("Saving aggregates: " + aggregates.length);
+				Parse.Object.saveAll(aggregates).then(function() {
+					promise.resolve("done");
+				}, function(error) {
+					console.error(error);
+					promise.reject(error);
+				});
+			});
+		});
 	}, function(error) {
 		promise.reject(error);
 	});
