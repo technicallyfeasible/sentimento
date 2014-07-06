@@ -1,0 +1,134 @@
+<html>
+<head>
+    <title>My Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css">
+    <script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
+</head>
+<body>
+<div data-role="page">
+    <div data-role="header">
+        <h1>My Title</h1>
+    </div>
+    <!-- /header -->
+    <div data-role="content">
+        <p>Hello world</p>
+    </div>
+    <!-- /content -->
+    <div data-role="footer">
+        <h4>My Footer</h4>
+    </div>
+    <!-- /footer -->
+</div>
+<!-- /page -->
+
+<ul data-role="listview" data-split-icon="gear" data-split-theme="a" data-inset="true">
+    <li><a href="#">
+        <img src="../_assets/img/album-bb.jpg">
+
+        <h2>Broken Bells</h2>
+
+        <p>Broken Bells</p></a>
+        <a href="#purchase" data-rel="popup" data-position-to="window" data-transition="pop">Purchase album</a>
+    </li>
+    <li><a href="#">
+        <img src="../_assets/img/album-hc.jpg">
+
+        <h2>Warning</h2>
+
+        <p>Hot Chip</p></a>
+        <a href="#purchase" data-rel="popup" data-position-to="window" data-transition="pop">Purchase album</a>
+    </li>
+    <li><a href="#">
+        <img src="../_assets/img/album-p.jpg">
+
+        <h2>Wolfgang Amadeus Phoenix</h2>
+
+        <p>Phoenix</p></a>
+        <a href="#purchase" data-rel="popup" data-position-to="window" data-transition="pop">Purchase album</a>
+    </li>
+</ul>
+<div data-role="popup" id="purchase" data-theme="a" data-overlay-theme="b" class="ui-content"
+     style="max-width:340px; padding-bottom:2em;">
+    <h3>Purchase Album?</h3>
+
+    <p>Your download will begin immediately on your mobile device when you purchase.</p>
+    <a href="index.html" data-rel="back"
+       class="ui-shadow ui-btn ui-corner-all ui-btn-b ui-icon-check ui-btn-icon-left ui-btn-inline ui-mini">Buy:
+        $10.99</a>
+    <a href="index.html" data-rel="back" class="ui-shadow ui-btn ui-corner-all ui-btn-inline ui-mini">Cancel</a>
+</div>
+
+
+<script type="text/javascript">
+    Parse.initialize("NqximxNgr0SHfBnzlttUwbmIRuFJfWV6nea9N5jI", "0KitXvzwMe4NPk64VUeirTTJE4FqpTsdcPdgEnTs");
+    //Parse.initialize("Dd6QnsTaZMusV0FUOzfI5b7AkoOOaWeWEUT9Cg7p", "fYosGWfk9CjaviIoo5BRh0x3ygXXS5yAHdzzEQ5w");
+
+
+    function fetchFriendData() {
+        document.getElementById('results').innerHTML = "<li class='list-group-item'>Fetching your data...</li>";
+
+
+        var Friends = Parse.Object.extend("Friend");
+        var query = new Parse.Query(Friends);
+
+        query.find({
+            success: function (friendsData) {
+
+                document.getElementById('user-name').innerHTML = Parse.User.current().get('firstName'); //TODO : put user's actual name
+
+                var html = "";
+
+                //initial part of the table html
+
+
+                // finished aggregating into last daily buckets for last 7 days,now display images based on average
+                var tableHtml = "    <table class='table'><thead><tr><th>Date</th><th>Mood</th><th>Mood Image</th></tr></thead><tbody>";
+                for (var j = 0; j < 7; j++) {
+                    //construct the table rows with happy, neutral, sad images and dates
+                    var goodPoint = 0.5;
+                    var badPoint = 0;
+
+
+                    var imageUrl;
+                    var average = sumVector[j] / countVector[j];
+
+                    if ((average >= -1) && (average < badPoint)) {
+                        imageUrl = "images/sad.png";
+                    }
+                    else {
+                        if ((average >= badPoint) && (average < goodPoint)) {
+                            imageUrl = "images/neutral.png";
+                        }
+                        else {
+                            imageUrl = "images/happy.png";
+                        }
+
+
+                    }
+                    imageHtml = "<img src='" + imageUrl + "'  class= 'mood-image'"
+                    tableHtml += "<tr><td>" + dateLabelVector[j] + "</td><td>" + average.toFixed(2) + "</td><td>" + imageHtml + "</td></tr>";
+
+                    console.log('For date ' + dateLabelVector[j] + ' average mood of ' + countVector[j] + ' posts is ' + sumVector[j] / countVector[j]);
+
+                }
+
+                //final part of the table html
+                tableHtml += " </tbody></table>"
+
+                document.getElementById('results').innerHTML = tableHtml;
+
+
+            },
+            error: function (object, error) {
+                document.getElementById('results').innerHTML = "<li class='list-group-item'>There was an error: " + error.message + " (" + error.code + ")</li>";
+            }
+        });
+    }
+    //fetchFriendData();
+</script>
+
+
+</body>
+</html>
