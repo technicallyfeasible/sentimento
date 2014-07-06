@@ -140,6 +140,8 @@
 											countVector[j] = 1;
                     var imageUrl;
                     var average = sumVector[j]/countVector[j];
+										if (isNaN(average))
+											average = 0;
 
                     if((average>=-1) && (average<badPoint)){
                         imageUrl = "images/sad.png";
