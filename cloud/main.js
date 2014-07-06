@@ -56,7 +56,7 @@ function updateUser(user, response) {
 		console.error(error);
 		(response && response.error(error));
 	});
-}
+};
 
 Parse.Cloud.define("updateUser", function (request, response) {
 	var user = Parse.User.current();
@@ -99,11 +99,10 @@ function getSentiments(promise, texts) {
 			promise.reject(httpResponse.text);
 	  }
   });
-}
+};
 
 
-Parse.Cloud.define("sync", function (request, response) {
-	var user = Parse.User.current();
+function sync(user, request, response) {
 	if (!user) {
 		response.error("Not logged in");
 		return;
@@ -114,7 +113,7 @@ Parse.Cloud.define("sync", function (request, response) {
   // Quit early for users who aren't linked with Facebook
   var authData = user.get("authData");
   if (authData === undefined || authData.facebook === undefined) {
-		response.error("Not connected to fb");
+		response.error("Not connected to fb: " + user.id);
     return;
   }
 
@@ -124,7 +123,7 @@ Parse.Cloud.define("sync", function (request, response) {
 	var since = date.getFullYear() + "-" + ('0' + (date.getMonth()+1)).slice(-2) + "-" + ('0' + date.getDate()).slice(-2);
 
 	// ACL to restrict write to user, and public read access
-	var owner_acl = new Parse.ACL(Parse.User.current());
+	var owner_acl = new Parse.ACL(user);
 
 	Parse.Cloud.httpRequest({
     method: "GET",
@@ -210,6 +209,10 @@ Parse.Cloud.define("sync", function (request, response) {
 			response.error(httpResponse.text);
 	  }
   });
+};
+
+Parse.Cloud.define("sync", function (request, response) {
+	sync(Parse.User.current(), request, response);
 });
 
 
@@ -217,23 +220,39 @@ Parse.Cloud.job("sync", function(request, status) {
 	// Set up to modify user data
 	Parse.Cloud.useMasterKey();
 
-  var counter = 0;
-  // Query for all users
-  var query = new Parse.Query(Parse.User);
-  query.each(function(user) {
-      // Update to plan value passed in
-      user.set("plan", request.params.plan);
-      if (counter % 100 === 0) {
-        // Set the  job's progress status
-        status.message(counter + " users processed.");
-      }
-      counter += 1;
-      return user.save();
-  }).then(function() {
-    // Set the job's success status
-    status.success("Migration completed successfully.");
-  }, function(error) {
-    // Set the job's error status
-    status.error("Uh oh, something went wrong.");
-  });
+	var query = new Parse.Query(Parse.User);
+  query.find().then(function(users) {
+
+		var iterator = function(i) {
+			if (i < users.length) {
+				var user = users[i];
+				var promise = new Parse.Promise();
+				var wrap = {"success": promise.resolve, "error": promise.reject };
+				promise.then(function() {
+					console.log("inner");
+					var promise2 = new Parse.Promise();
+					var wrap2 = {"success": promise2.resolve, "error": promise2.reject };
+					promise2.then(function() {
+						iterator(i + 1);
+					}, function(error) {
+						console.error("Error: " + error);
+						status.error(error);
+					});
+					console.log("Starting sync for user " + user.id);
+					sync(user, request, wrap2);
+				}, function(error) {
+					console.error("Error: " + error);
+					status.error(error);
+				});
+				console.log("Updating user " + user.id);
+				updateUser(user, wrap);
+			}
+			else
+				status.success("done");
+		};
+		iterator(0);
+
+	}, function(error) {
+		status.error(error);
+	});
 });

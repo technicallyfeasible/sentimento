@@ -18,12 +18,10 @@
     <![endif]-->
     <script type="text/javascript" src="http://www.parsecdn.com/js/parse-1.2.18.min.js"></script>
 
-    <script src="Chart.js"></script>
+    <!--script src="Chart.js"></script-->
 
 </head>
 <body>
-
-<button onclick="startSync();">Start sync</button>
 
 
 <h1>Welcome
@@ -33,6 +31,8 @@
 <h2>
     Let's see how your mood was over the last week from your life-logs
 </h2>
+
+<button id="refresh_button" onclick="doSync();">refresh</button>
 
 <ul id="results" class="list-group">
 </ul>
@@ -45,18 +45,16 @@
 
 
 
-
 <script type="text/javascript">
     Parse.initialize("NqximxNgr0SHfBnzlttUwbmIRuFJfWV6nea9N5jI", "0KitXvzwMe4NPk64VUeirTTJE4FqpTsdcPdgEnTs");
     //Parse.initialize("Dd6QnsTaZMusV0FUOzfI5b7AkoOOaWeWEUT9Cg7p", "fYosGWfk9CjaviIoo5BRh0x3ygXXS5yAHdzzEQ5w");
 
-    Parse.Cloud.run('updateUser', {}, {
-    	success: function(result) {
-    },
-		error: function(error) {
-			alert(error);
-    }
-    });
+		function updateUser() {
+			Parse.Cloud.run('updateUser', {}, { error: function(error) { alert(error); } });
+		}
+		function doSync() {
+			Parse.Cloud.run('sync', {}, { success: function() { fetchData(); }, error: function(error) { alert(error); } });
+		}
 
     function fetchData() {
         document.getElementById('results').innerHTML = "<li class='list-group-item'>Fetching your data...</li>";
@@ -159,7 +157,14 @@
             }
         });
     }
-    fetchData();
+
+		var user = Parse.User.current();
+		if (user && user.authenticated()) {
+			updateUser();
+    	fetchData();
+		}
+		else
+			document.getElementById("refresh_button").style.display = "none";
 </script>
 </body>
 </html>
