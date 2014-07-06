@@ -33,8 +33,9 @@
 </h2>
 
 <div id="actions">
-	<button onclick="doSync();">refresh</button>
-	<button onclick="logout();">logout</button>
+	<button onclick="doSync();">Refresh</button>
+	<button onclick="logout();">Logout</button>
+    <button onclick="showlist();">Share Joy</button>
 <div>
 
 <ul id="results" class="list-group">
@@ -62,6 +63,11 @@
 			Parse.User.logOut();
 			window.location.href = "index.html";
 		}
+    function showlist() {
+
+        window.location.href = "list.html";
+        window.location.href = "list.html";
+    }
 
     function fetchData() {
         document.getElementById('results').innerHTML = "<li class='list-group-item'>Fetching your data...</li>";
