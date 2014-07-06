@@ -38,7 +38,8 @@ function updateUser(user) {
 		user.set("lastName", fbData.last_name);
 		user.save();
 
-		return Parse.Cloud.httpRequest({
+		var subPromise = new Parse.Promise();
+		Parse.Cloud.httpRequest({
  	    method: "GET",
  	    url: "https://graph.facebook.com/me/picture",
  	    params: {
@@ -49,14 +50,26 @@ function updateUser(user) {
 			// we got facebook picture, so store it with the user
 			user.set("fb_pic", httpResponse.headers["Location"]);
 			user.save();
+			subPromise.resolve();
 		}, function(httpResponse) {
 			console.error("err: " + httpResponse.headers["Location"]);
 			// we got facebook picture, so store it with the user
 			user.set("fb_pic", httpResponse.headers["Location"]);
 			user.save();
+			subPromise.resolve();
 		});
-	//}).then(function(){
+		return subPromise;
+	}).then(function(){
 		// fetch friends
+		return Parse.Cloud.httpRequest({
+ 	    method: "GET",
+ 	    url: "https://graph.facebook.com/me/friends",
+ 	    params: {
+ 	      access_token: authData.facebook.access_token
+ 	    }
+		}).then(function(httpResponse) {
+			console.error(httpResponse.text);
+		});
 	}).then(function() {
 		promise.resolve();
 	}, function(error) { 
@@ -123,7 +136,7 @@ function sync(user) {
 
 	//Parse.Cloud.useMasterKey();
 
-  // Quit early for users who aren't linked with Facebook
+  // Quit early for users who are not linked with Facebook
   var authData = user.get("authData");
   if (authData === undefined || authData.facebook === undefined) {
 		promise.reject("Not connected to fb: " + user.id);

@@ -54,10 +54,10 @@
     //Parse.initialize("Dd6QnsTaZMusV0FUOzfI5b7AkoOOaWeWEUT9Cg7p", "fYosGWfk9CjaviIoo5BRh0x3ygXXS5yAHdzzEQ5w");
 
 		function updateUser() {
-			Parse.Cloud.run('updateUser', {}, { error: function(error) { alert(JSON.stringify(error)); } });
+			Parse.Cloud.run('updateUser', {}, { error: function(error) { /*alert(JSON.stringify(error));*/ } });
 		}
 		function doSync() {
-			Parse.Cloud.run('sync', {}, { success: function() { fetchData(); }, error: function(error) { alert(JSON.stringify(error)); } });
+			Parse.Cloud.run('sync', {}, { success: function() { fetchData(); }, error: function(error) { /*alert(JSON.stringify(error));*/ } });
 		}
 		function logout() {
 			Parse.User.logOut();
