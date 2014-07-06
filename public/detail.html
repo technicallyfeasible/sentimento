@@ -86,8 +86,12 @@
 
         query.find({
             success: function(hourlyData) {
+                var userName = Parse.User.current().get('firstName');
+                if (userName = 'undefined') {
+                    userName = ''
+                }
 
-                document.getElementById('user-name').innerHTML = Parse.User.current().get('firstName'); //TODO : put user's actual name
+                document.getElementById('user-name').innerHTML = userName
 
                 var html = "";
 
