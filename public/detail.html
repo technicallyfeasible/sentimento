@@ -70,6 +70,14 @@
         var Aggregate = Parse.Object.extend("Aggregate");
         var query = new Parse.Query(Aggregate);
 
+        // get the date that is 7 days before current date
+        var now = new Date();
+        now.setDate(now.getDate()-7);
+
+        // Now now variable has the date that is 7 day from today
+
+        query.greaterThanOrEqualTo("date", now);
+
         query.find({
             success: function(hourlyData) {
 
