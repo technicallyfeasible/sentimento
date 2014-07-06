@@ -68,6 +68,7 @@ function updateUser(user) {
  	      access_token: authData.facebook.access_token
  	    }
 		}).then(function(httpResponse) {
+			console.error("got friends");
 			console.error(httpResponse.text);
 		});
 	}).then(function() {
